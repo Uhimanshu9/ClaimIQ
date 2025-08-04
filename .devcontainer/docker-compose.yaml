@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - ../..:/workspaces:cached
+    command: sleep infinity
+    environment:
+      - REDIS_URL=redis://valkey:6379
+    ports:
+      - "8000:8000"
+    # This is the simplest, most direct way to set the DNS for this service.
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+    volumes:
+      - mongodb_data:/data/db/
+
+  valkey:
+    image: valkey/valkey:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - valkey_data:/usr/local/etc/valkey
+
+volumes:
+  mongodb_data:
+  valkey_data:
+
+# NOTE: There is NO top-level "networks:" section in this file.
