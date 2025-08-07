@@ -1,4 +1,5 @@
-version: "3.8"
+
+
 
 services:
   app:
@@ -12,7 +13,6 @@ services:
       - REDIS_URL=redis://valkey:6379
     ports:
       - "8000:8000"
-    # This is the simplest, most direct way to set the DNS for this service.
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -39,4 +39,3 @@ volumes:
   mongodb_data:
   valkey_data:
 
-# NOTE: There is NO top-level "networks:" section in this file.

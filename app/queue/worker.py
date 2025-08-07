@@ -6,7 +6,7 @@ from google import genai
 from google.genai import types
 
 # Configure Gemini client
-client = genai.Client(api_key="hh")
+client = genai.Client(api_key="AIzaSyALKw7su4WoLec6v-4vEHponzPHMUCcWpQ")
 
 
 async def process_file(id: str, file_path: str):
