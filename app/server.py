@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile
+from pydantic import BaseModel
 from .utils.file import save_to_disk
 from .db.collections.files import files_collection, FileSchema
 from .queue.create_queue import q

@@ -16,9 +16,7 @@ async def process_file(id: str, file_path: str):
             "$set": {"status": "storing chunks in qdrant db"}
         })
 
-        # Run the synchronous create_vector_store function in a thread to avoid blocking event loop
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(None, create_vector_store, file_path)
+        await create_vector_store(file_path)
 
         # Update status to chunking done
         await files_collection.update_one({"_id": ObjectId(id)}, {
@@ -33,9 +31,7 @@ async def process_file(id: str, file_path: str):
         # Optionally, you could log the error or re-raise
 
 
-# If you want an entry point to test this async function standalone:
-# import asyncio
-# asyncio.run(process_file("some_file_id_here", "/path/to/file.pdf"))
+
 
 
 

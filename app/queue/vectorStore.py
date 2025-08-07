@@ -30,7 +30,7 @@ def create_vector_store(file_path: str, collection_name: str = "pdf_collection",
     print(f"Vector store created with {len(split_docs)} documents in '{collection_name}'.")
 
 
-def get_vector_store(query: str, collection_name: str = "pdf_collection", qdrant_url: str = "http://localhost:6333"):
+def get_vector_store(query: str, collection_name: str = "pdf_collection", qdrant_url: str = "http://qdrant:6333"):
     retiver = QdrantVectorStore.from_existing_collection(
         collection_name=collection_name,
         embedding=HuggingFaceEmbeddings(model_name="BAAI/bge-base-en-v1.5"),
