@@ -6,6 +6,12 @@ from .queue.worker import process_file
 app = FastAPI()
 
 
+
+class QueryRequest(BaseModel):
+    query: str
+    collection_name: str = "pdf_collection"
+    
+
 @app.get("/")
 def read_root():
     return {"Hello": "World!"}
@@ -33,3 +39,23 @@ async def update_file(file: UploadFile):
     })
     # await queue.push(id, filepath)
     return {"file_id": str(db_file.inserted_id)}
+
+
+
+
+@app.post("/query")
+async def query_pdf(request: QueryRequest):
+    try:
+        results = get_vector_store(query=request.query, collection_name=request.collection_name)
+        return {
+            "query": request.query,
+            "results": [
+                {
+                    "content": doc.page_content,
+                    "metadata": doc.metadata,
+                } for doc in results
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+

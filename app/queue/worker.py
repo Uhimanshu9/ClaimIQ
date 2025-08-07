@@ -1,93 +1,42 @@
 from ..db.collections.files import files_collection
 from bson import ObjectId
-import os
-from pdf2image import convert_from_path
-from google import genai
-from google.genai import types
-
-# Configure Gemini client
-client = genai.Client(api_key="AIzaSyALKw7su4WoLec6v-4vEHponzPHMUCcWpQ")
+from .vectorStore import create_vector_store
+import asyncio
 
 
 async def process_file(id: str, file_path: str):
-    await files_collection.update_one({"_id": ObjectId(id)}, {
-        "$set": {
-            "status": "processing"
-        }
-    })
-
-    await files_collection.update_one({"_id": ObjectId(id)}, {
-        "$set": {
-            "status": "converting to images"
-        }
-    })
-
-    # Step 1: Convert the PDF to Images
-    pages = convert_from_path(file_path)
-    images = []
-
-    for i, page in enumerate(pages):
-        image_save_path = f"/mnt/uploads/images/{id}/image-{i}.jpg"
-        os.makedirs(os.path.dirname(image_save_path), exist_ok=True)
-        page.save(image_save_path, 'JPEG')
-        images.append(image_save_path)
-
-    await files_collection.update_one({"_id": ObjectId(id)}, {
-        "$set": {
-            "status": "converting to images success"
-        }
-    })
-
-    # Step 2: Process with Gemini using new SDK
     try:
-        # Read the first image as bytes
-        with open(images[0], 'rb') as f:
-            image_bytes = f.read()
-
-        # Resume roasting prompt
-        roast_prompt = """
-        Based on the resume below, Roast this resume. Be witty,
-        constructive, and point out:
-        1. Formatting issues and design problems
-        2. Content gaps or weaknesses
-        3. Overused buzzwords or clichés
-        4. Missing important information
-        5. Areas for improvement
-        Make it entertaining but helpful for the candidate 
-        to improve their resume.
-        """
-
-        # Generate content using the new SDK
-        response = client.models.generate_content(
-            model='gemini-2.0-flash-exp',
-            contents=[
-                types.Part.from_bytes(
-                    data=image_bytes,
-                    mime_type='image/jpeg', 
-                ),
-                roast_prompt
-            ]
-        )
-        
-        # Update database with results
+        # Update status to processing
         await files_collection.update_one({"_id": ObjectId(id)}, {
-            "$set": {
-                "status": "processed",
-                "result": response.text
-            }
+            "$set": {"status": "processing"}
         })
-        
+
+        # Update status to indicate storing chunks
+        await files_collection.update_one({"_id": ObjectId(id)}, {
+            "$set": {"status": "storing chunks in qdrant db"}
+        })
+
+        # Run the synchronous create_vector_store function in a thread to avoid blocking event loop
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, create_vector_store, file_path)
+
+        # Update status to chunking done
+        await files_collection.update_one({"_id": ObjectId(id)}, {
+            "$set": {"status": "chunking is done"}
+        })
+
     except Exception as e:
-        # Handle errors
+        # Update status with error information
         await files_collection.update_one({"_id": ObjectId(id)}, {
-            "$set": {
-                "status": "error",
-                "error": str(e)
-            }
+            "$set": {"status": f"error: {str(e)}"}
         })
-        raise e
+        # Optionally, you could log the error or re-raise
 
-    # queue: Email Queue - Your file is ready
+
+# If you want an entry point to test this async function standalone:
+# import asyncio
+# asyncio.run(process_file("some_file_id_here", "/path/to/file.pdf"))
+
 
 
 # rq worker --with-scheduler --url redis://valkey:6379

@@ -1,0 +1,18 @@
+✍️ Add hybrid search code using Qdrant?
+
+🤖 Add reranking code using Gemini/OpenAI?
+
+
+✅ Option 1: Hybrid Search (Qdrant supports this natively!)
+Qdrant lets you do this via filters or multi-field search using:
+
+Embedding vector
+
+Exact keyword matching (e.g., on metadata.text)
+
+You can use search_points API or filter with text fields.
+
+✅ Option 2: Re-ranking using Gemini or OpenAI
+After similarity_search(query), pass top 5–10 chunks + the query to a reranker model (e.g. Gemini or Cohere Rerank), and return the most relevant ones.
+
+how to implement this 
