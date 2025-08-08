@@ -4,14 +4,16 @@ from .utils.file import save_to_disk
 from .db.collections.files import files_collection, FileSchema
 from .queue.create_queue import q
 from .queue.worker import process_file
-app = FastAPI()
+from .utils.chat_gemini import chat_with_gemini
+from fastapi import HTTPException
 
+app = FastAPI()
 
 
 class QueryRequest(BaseModel):
     query: str
     collection_name: str = "pdf_collection"
-    
+
 
 @app.get("/")
 def read_root():
@@ -42,21 +44,11 @@ async def update_file(file: UploadFile):
     return {"file_id": str(db_file.inserted_id)}
 
 
-
-
 @app.post("/query")
 async def query_pdf(request: QueryRequest):
     try:
-        results = get_vector_store(query=request.query, collection_name=request.collection_name)
-        return {
-            "query": request.query,
-            "results": [
-                {
-                    "content": doc.page_content,
-                    "metadata": doc.metadata,
-                } for doc in results
-            ]
-        }
+        response = chat_with_gemini(
+            query=request.query, collection_name=request.collection_name)
+        return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-

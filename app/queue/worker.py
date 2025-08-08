@@ -10,11 +10,11 @@ async def process_file(id: str, file_path: str):
         await files_collection.update_one(
             {"_id": ObjectId(id)},
             {"$set": {"status": "processing"}}
-            )
+        )
         await files_collection.update_one(
             {"_id": ObjectId(id)},
             {"$set": {"status": "storing chunks in qdrant db"}}
-            )
+        )
 
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, create_vector_store, file_path)
@@ -22,12 +22,12 @@ async def process_file(id: str, file_path: str):
         await files_collection.update_one(
             {"_id": ObjectId(id)},
             {"$set": {"status": "chunking is done"}}
-            )
+        )
     except Exception as e:
         await files_collection.update_one(
             {"_id": ObjectId(id)},
             {"$set": {"status": f"error: {str(e)}"}}
-            )
+        )
 
 
 # rq worker --with-scheduler --url redis://valkey:6379
