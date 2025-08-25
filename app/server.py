@@ -49,7 +49,9 @@ async def update_file(file: UploadFile):
 async def query_pdf(request: QueryRequest):
     try:
         response = retrieve(
-            query=request.query, collection_name=request.collection_name)
-        return response
+            user_query=request.query,
+            # collection_name=request.collection_name
+        )
+        return {"status": "success", "data": response}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")

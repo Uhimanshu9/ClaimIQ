@@ -42,7 +42,7 @@ def get_gemini_embedding(text: str, dims: int = 768) -> List[float]:
 
 
 class GeminiEmbeddings(Embeddings):
-    def _init_(self, dims: int = 768):
+    def __init__(self, dims: int = 768):
         self.dims = dims
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
@@ -482,7 +482,7 @@ def retrieve(user_query: str, top_k: int = 3) -> Dict[str, Any]:
         ],
         "final_answer": final_answer
     }
-# if _name_ == "_main_":
+# if __name__ == "__main__":
 #     import json
 
 #     # Example test query
@@ -494,7 +494,7 @@ def retrieve(user_query: str, top_k: int = 3) -> Dict[str, Any]:
 #     # Pretty print JSON output
 #     print(json.dumps(result, indent=2, ensure_ascii=False))
 
-# if _name_ == "_main_":
+# if __name__ == "__main__":
 #     import json
 
 #     query = "46M, knee surgery, Pune, 3-month policy"
@@ -522,3 +522,6 @@ def retrieve(user_query: str, top_k: int = 3) -> Dict[str, Any]:
 #                 print(f"- {t}")
 #         else:
 #             print("\n(No titles found in metadata)")
+
+
+put_pdf("zz.pdf")
