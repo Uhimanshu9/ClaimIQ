@@ -1,3 +1,4 @@
+import re
 import os
 import json
 import uuid
@@ -14,7 +15,6 @@ from langchain_core.embeddings import Embeddings
 from google import genai
 from google.genai import types
 from pathlib import Path
-
 
 
 # ===== Load env =====
@@ -65,7 +65,8 @@ User query: {json.dumps(query)}
         resp = gemini_client.models.generate_content(
             model=model,
             contents=prompt,
-            config=types.GenerateContentConfig(system_instruction="Output must be a JSON array of strings.")
+            config=types.GenerateContentConfig(
+                system_instruction="Output must be a JSON array of strings.")
         )
         raw = resp.text.strip() if hasattr(resp, "text") else ""
         # try to locate JSON substring if there's extra text
@@ -85,7 +86,8 @@ User query: {json.dumps(query)}
             except Exception:
                 pass
 
-        print(f"[query expansion] Attempt {attempt} failed to produce clean JSON. Retrying...")
+        print(
+            f"[query expansion] Attempt {attempt} failed to produce clean JSON. Retrying...")
         time.sleep(0.5 * attempt)
 
     print("[query expansion] falling back to original query")
@@ -99,7 +101,8 @@ def create_vector_store(file_path: str, collection_name: str = COLLECTION_NAME):
     print(f"Loaded {len(documents)} page-like documents from {file_path}")
 
     # Use structure-aware splitter but keep chunks reasonably sized
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=150)
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1500, chunk_overlap=150)
     split_docs = text_splitter.split_documents(documents)
     print(f"Split into {len(split_docs)} chunks")
 
@@ -158,7 +161,8 @@ def rerank_with_gemini(query: str, chunks: List[Any], max_retries: int = 3, mode
         candidates.append({"id": mid, "text": txt[:2000], "meta": c.metadata})
 
     # build a prompt containing numbered chunks
-    numbered_text = "\n\n".join([f"#{i+1} (id:{cand['id']}):\n{cand['text']}" for i, cand in enumerate(candidates)])
+    numbered_text = "\n\n".join(
+        [f"#{i+1} (id:{cand['id']}):\n{cand['text']}" for i, cand in enumerate(candidates)])
     prompt = f"""
 You are a scoring assistant. Given the user query and a list of document chunks, return a JSON array of numbers (one per chunk in the same order)
 where each number is the relevance score from 0 (not relevant) to 1 (highly relevant).
@@ -175,7 +179,8 @@ Return ONLY a JSON array of floats like: [0.12, 0.9, ...] with exactly one float
         resp = gemini_client.models.generate_content(
             model=model,
             contents=prompt,
-            config=types.GenerateContentConfig(system_instruction="Output must be a JSON array of floats.")
+            config=types.GenerateContentConfig(
+                system_instruction="Output must be a JSON array of floats.")
         )
         raw = resp.text.strip() if hasattr(resp, "text") else ""
         try:
@@ -276,7 +281,8 @@ Return ONLY this JSON object.
         resp = gemini_client.models.generate_content(
             model=model,
             contents=prompt,
-            config=types.GenerateContentConfig(system_instruction="Output must be a single JSON object.")
+            config=types.GenerateContentConfig(
+                system_instruction="Output must be a single JSON object.")
         )
         raw = resp.text.strip() if hasattr(resp, "text") else ""
         try:
@@ -317,11 +323,13 @@ def apply_rules_and_ml(extracted_attributes: Dict[str, Any], applicant: Dict[str
     age_max = extracted_attributes.get("age_max")
     if age_min is not None and age < age_min:
         result["eligible"] = False
-        result["reasons"].append(f"Applicant age {age} < policy minimum {age_min}")
+        result["reasons"].append(
+            f"Applicant age {age} < policy minimum {age_min}")
         return result
     if age_max is not None and age > age_max:
         result["eligible"] = False
-        result["reasons"].append(f"Applicant age {age} > policy maximum {age_max}")
+        result["reasons"].append(
+            f"Applicant age {age} > policy maximum {age_max}")
         return result
 
     result["eligible"] = True
@@ -330,7 +338,8 @@ def apply_rules_and_ml(extracted_attributes: Dict[str, Any], applicant: Dict[str
 
 
 # ===== 8) Small util to extract numeric constraints from chunks (very small heuristic) =====
-import re
+
+
 def extract_structured_params_from_chunks(chunks: List[Dict]) -> Dict[str, Any]:
     """
     Heuristic: look for patterns like 'age 18 to 65' or 'aged between 18 and 65' etc.
@@ -338,7 +347,8 @@ def extract_structured_params_from_chunks(chunks: List[Dict]) -> Dict[str, Any]:
     """
     text = " ".join([c["page_content"] for c in chunks]).lower()
     # pattern examples: 'age 18 to 65', 'aged between 18 and 65', 'age limit is 65 years'
-    m = re.search(r"age[s]?\s*(?:limit)?\s*(?:is|:|of|between)?\s*(\d{1,3})\s*(?:to|and|-)\s*(\d{1,3})", text)
+    m = re.search(
+        r"age[s]?\s*(?:limit)?\s*(?:is|:|of|between)?\s*(\d{1,3})\s*(?:to|and|-)\s*(\d{1,3})", text)
     out = {}
     if m:
         try:
@@ -365,7 +375,8 @@ def rag_pipeline(user_query: str, applicant_context: Dict[str, Any] = None, top_
     # 2. Search in parallel across expanded queries
     all_hits = []
     with ThreadPoolExecutor(max_workers=min(6, len(expanded))) as ex:
-        futures = [ex.submit(search_vector_store, q, top_k=top_k_per_query) for q in expanded]
+        futures = [ex.submit(search_vector_store, q,
+                             top_k=top_k_per_query) for q in expanded]
         for f in futures:
             res = f.result()
             all_hits.extend(res)
@@ -387,7 +398,8 @@ def rag_pipeline(user_query: str, applicant_context: Dict[str, Any] = None, top_
     # assemble evidence details from top_chunks mapping to CHUNK ids used by LLM
     evidence_map = {}
     for i, c in enumerate(top_chunks, 1):
-        evidence_map[f"CHUNK {i}"] = {"chunk_id": c["chunk_id"], "source": c["metadata"].get("source_document"), "text_preview": c["page_content"][:300]}
+        evidence_map[f"CHUNK {i}"] = {"chunk_id": c["chunk_id"], "source": c["metadata"].get(
+            "source_document"), "text_preview": c["page_content"][:300]}
 
     # 6. Extract structured params and apply rules (example)
     extracted = extract_structured_params_from_chunks(top_chunks)
@@ -404,8 +416,6 @@ def rag_pipeline(user_query: str, applicant_context: Dict[str, Any] = None, top_
         "extracted_attributes": extracted,
         "decision": decision
     }
-
-
 
 
 def put_pdf(pdf_path: str) -> Dict[str, Any]:
@@ -432,7 +442,7 @@ def put_pdf(pdf_path: str) -> Dict[str, Any]:
     }
 
 
-# 
+#
 def retrieve(user_query: str, top_k: int = 3) -> Dict[str, Any]:
     """
     High-level function to search Qdrant for a user query and summarize with Gemini.
@@ -524,4 +534,4 @@ def retrieve(user_query: str, top_k: int = 3) -> Dict[str, Any]:
 #             print("\n(No titles found in metadata)")
 
 
-put_pdf("zz.pdf")
+# put_pdf("zz.pdf")

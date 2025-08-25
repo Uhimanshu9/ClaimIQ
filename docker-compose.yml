@@ -6,6 +6,7 @@ services:
     environment:
       - PYTHONPATH=/app
       - PYTHONUNBUFFERED=1
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     volumes:
       - uploads:/mnt/uploads
       - ./app:/app/app  # For development - remove in production

@@ -20,6 +20,7 @@ RUN pip install --upgrade pip
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .
+COPY run.sh .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
@@ -32,4 +33,4 @@ RUN mkdir -p /mnt/uploads
 EXPOSE 8000
 
 # Run the application
-CMD ["./run.sh"]
+CMD ["sh run.sh"]
