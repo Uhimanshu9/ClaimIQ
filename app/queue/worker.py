@@ -3,6 +3,7 @@ from bson import ObjectId
 from .vectorStore import create_vector_store
 # import asyncio
 import asyncio
+from .vectorStore import put_pdf
 
 
 async def process_file(id: str, file_path: str):
@@ -17,7 +18,7 @@ async def process_file(id: str, file_path: str):
         )
 
         loop = asyncio.get_event_loop()
-        await loop.run_in_executor(None, create_vector_store, file_path)
+        await loop.run_in_executor(None, put_pdf, file_path)
 
         await files_collection.update_one(
             {"_id": ObjectId(id)},

@@ -4,8 +4,9 @@ from .utils.file import save_to_disk
 from .db.collections.files import files_collection, FileSchema
 from .queue.create_queue import q
 from .queue.worker import process_file
-from .utils.chat_gemini import chat_with_gemini
+# from .utils.chat_gemini import chat_with_gemini
 from fastapi import HTTPException
+from .queue.vectorStore import retrieve
 
 app = FastAPI()
 
@@ -47,7 +48,7 @@ async def update_file(file: UploadFile):
 @app.post("/query")
 async def query_pdf(request: QueryRequest):
     try:
-        response = chat_with_gemini(
+        response = retrieve(
             query=request.query, collection_name=request.collection_name)
         return response
     except Exception as e:
