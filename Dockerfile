@@ -33,4 +33,4 @@ RUN mkdir -p /mnt/uploads
 EXPOSE 8000
 
 # Run the application
-CMD ["sh run.sh"]
+CMD ["./run.sh"]
