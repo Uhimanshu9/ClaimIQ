@@ -1,12 +1,13 @@
 services:
   app:
     build: .
+    env_file:
+      - .env
     ports:
       - "8000:8000"
     environment:
       - PYTHONPATH=/app
       - PYTHONUNBUFFERED=1
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
     volumes:
       - uploads:/mnt/uploads
       - ./app:/app/app  # For development - remove in production
@@ -50,4 +51,3 @@ volumes:
   valkey_data:
   uploads:
   qdrant_data:
-

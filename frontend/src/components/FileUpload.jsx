@@ -28,7 +28,9 @@ const FileUpload = ({ onFileSelect }) => {
       const uploadResult = await uploadFile(file);
       
       const fileData = {
-        ...file,
+        name: file.name,
+        size: file.size,
+        type: file.type,
         fileId: uploadResult.fileId,
         uploadSuccess: true
       };
