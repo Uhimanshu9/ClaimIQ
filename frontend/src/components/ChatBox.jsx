@@ -113,8 +113,8 @@ const ChatBox = ({ file, initialMessages = [], initialProvider = "gemini", onCon
         <div className="composer-actions">
           <label className="composer-provider">
             <select value={provider} onChange={handleProviderChange} disabled={isLoading || indexing.status !== "ready"}>
-              <option value="gemini">Gemini</option>
-              <option value="openai">OpenAI</option>
+              <option value="gemini">Gemini via LiteLLM</option>
+              <option value="openai">OpenAI via LiteLLM</option>
             </select>
           </label>
           <button className="send-button" type="submit" disabled={!question.trim() || isLoading || indexing.status !== "ready"} aria-label="Send message">↑</button>

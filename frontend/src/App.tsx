@@ -44,7 +44,7 @@ const panelContent: Record<InfoPanel, { title: string; description: string; sect
         heading: 'Backend & processing',
         items: [
           'FastAPI — REST API for document upload, indexing status, queries, providers, cancellation, and chat history.',
-          'Docker Compose — runs the API, worker, MongoDB, Valkey, and Qdrant together in a reproducible local environment.',
+          'Docker Compose — runs the API, LiteLLM gateway, worker, MongoDB, Valkey, and Qdrant together in a reproducible local environment.',
           'Valkey + RQ — queues long-running PDF extraction and indexing jobs outside the web request.',
           'PyPDF and LangChain splitting — extracts PDF content and divides it into retrievable chunks.',
         ],
@@ -54,15 +54,16 @@ const panelContent: Record<InfoPanel, { title: string; description: string; sect
         items: [
           'MongoDB — stores uploaded-document records, indexing state, and non-empty conversations in the chat_history collection.',
           'Qdrant — stores document chunk vectors and returns the most relevant evidence for each question.',
-          'OpenAI text-embedding-3-small — creates one consistent vector representation for the Qdrant collection.',
-          'Gemini, OpenAI, or Amazon Bedrock — selectable providers that generate the final answer from retrieved document context.',
+          'LiteLLM — provides one OpenAI-compatible gateway for chat and embedding requests while keeping provider-specific keys behind the gateway.',
+          'OpenAI text-embedding-3-small — remains the fixed embedding model for the existing Qdrant collection.',
+          'Gemini, OpenAI, or Amazon Bedrock — selectable upstream providers routed through LiteLLM for final answers.',
         ],
       },
       {
         heading: 'How the architecture works',
         items: [
-          'Upload flow: Browser → FastAPI → MongoDB document record → Valkey/RQ job → PDF extraction and chunking → OpenAI embeddings → Qdrant.',
-          'Question flow: Browser → FastAPI → query expansion → Qdrant similarity search → selected AI provider → grounded answer and sources returned to chat.',
+          'Upload flow: Browser → FastAPI → MongoDB document record → Valkey/RQ job → PDF extraction and chunking → LiteLLM embedding alias → Qdrant.',
+          'Question flow: Browser → FastAPI → query expansion → Qdrant similarity search → LiteLLM chat alias → grounded answer and sources returned to chat.',
           'History flow: Browser → FastAPI → MongoDB chat_history; only chats with messages are persisted.',
         ],
       },
