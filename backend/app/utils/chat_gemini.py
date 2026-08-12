@@ -1,12 +1,11 @@
 # from google import genai
 # from google.genai import types
 # # from ..queue.vectorStore import get_vector_store
-# GEMINI_API_KEY = "AIzaSyDa9Wc6y0J538wl_sIH7X10H4igsrcB1fU"
+# Provider credentials are configured through the LiteLLM Proxy environment.
 
 
-# # Initialize Gemini client
-# # Replace with secure loading in prod
-# client = genai.Client(api_key=GEMINI_API_KEY)
+# # Initialize a provider client only in a local experiment; production code
+# # routes through app.llm.router and the LiteLLM Proxy.
 
 # SYSTEM_PROMPT = """
 # You are an expert assistant for processing and evaluating natural

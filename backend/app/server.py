@@ -12,7 +12,7 @@ from .queue.worker import process_file
 # from .utils.chat_gemini import chat_with_gemini
 from fastapi import HTTPException
 from .queue.vectorStore import delete_document_vectors, retrieve
-from .llm.router import ProviderConfigurationError, supported_providers
+from .llm.router import ProviderConfigurationError, provider_models, supported_providers
 from bson import ObjectId
 from rq.job import Job
 from rq.command import send_stop_job_command
@@ -254,5 +254,5 @@ async def query_with_bedrock(request: BedrockQueryRequest):
 
 @app.get("/providers")
 def get_providers():
-    """Return the providers that clients may select for generated answers."""
-    return {"providers": supported_providers()}
+    """Return providers and their LiteLLM aliases for generated answers."""
+    return {"providers": supported_providers(), "models": provider_models()}

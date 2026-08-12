@@ -21,24 +21,34 @@ from ..llm.router import embed, generate
 load_dotenv()
 QDRANT_URL = os.getenv("QDRANT_URL", "http://qdrant:6333")
 COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "pdf_collection_openai_small")
+VECTOR_DIMENSIONS = int(os.getenv("VECTOR_DIMENSIONS", "1536"))
 
 # ===== Embedding helpers =====
-def get_gemini_embedding(text: str, dims: int = 768) -> List[float]:
+def get_embedding(text: str, dims: int = VECTOR_DIMENSIONS) -> List[float]:
     """
-    Return embedding vector for given text.
+    Return an embedding vector through the configured LiteLLM alias.
+
+    ``dims`` documents the Qdrant contract. The actual dimensionality is
+    determined by the model configured behind the LiteLLM alias.
     """
     return embed(text)
 
 
-class GeminiEmbeddings(Embeddings):
-    def __init__(self, dims: int = 768):
+class ProviderEmbeddings(Embeddings):
+    """LangChain adapter backed by the fixed ClaimIQ LiteLLM embedding alias."""
+
+    def __init__(self, dims: int = VECTOR_DIMENSIONS):
         self.dims = dims
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        return [get_gemini_embedding(t, dims=self.dims) for t in texts]
+        return [get_embedding(t, dims=self.dims) for t in texts]
 
     def embed_query(self, text: str) -> List[float]:
-        return get_gemini_embedding(text, dims=self.dims)
+        return get_embedding(text, dims=self.dims)
+
+
+# Backward-compatible import name for callers outside this module.
+GeminiEmbeddings = ProviderEmbeddings
 
 
 # ===== 1) Query expansion with retries, returns list[str] =====
@@ -97,7 +107,7 @@ def create_vector_store(file_path: str, file_id: str | None = None, collection_n
         if file_id:
             d.metadata["file_id"] = file_id
 
-    embedding = GeminiEmbeddings(dims=768)
+    embedding = ProviderEmbeddings(dims=VECTOR_DIMENSIONS)
     vector_store = QdrantVectorStore.from_documents(
         split_docs,
         embedding=embedding,
@@ -109,7 +119,7 @@ def create_vector_store(file_path: str, file_id: str | None = None, collection_n
 
 # ===== 3) Search vector store (reusable) =====
 def search_vector_store(query: str, top_k: int = 3, collection_name: str = COLLECTION_NAME):
-    embedding = GeminiEmbeddings(dims=768)
+    embedding = ProviderEmbeddings(dims=VECTOR_DIMENSIONS)
     retriever = QdrantVectorStore.from_existing_collection(
         collection_name=collection_name,
         embedding=embedding,

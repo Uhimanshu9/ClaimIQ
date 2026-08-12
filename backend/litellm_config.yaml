@@ -1,0 +1,43 @@
+# ClaimIQ's provider aliases. The application talks only to these aliases;
+# change the upstream model here when you intentionally want to change models.
+model_list:
+  - model_name: claimiq-chat-gemini
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: claimiq-chat-openai
+    litellm_params:
+      model: openai/gpt-4.1-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: claimiq-chat-bedrock
+    litellm_params:
+      model: bedrock/amazon.nova-lite-v1:0
+
+  # This preserves the current default in backend/.env.example. Do not point
+  # this alias at another embedding model without re-indexing Qdrant.
+  - model_name: claimiq-embedding-openai
+    litellm_params:
+      model: openai/text-embedding-3-small
+      api_key: os.environ/OPENAI_API_KEY
+    model_info:
+      mode: embedding
+      base_model: text-embedding-3-small
+
+  # Optional Gemini embedding route. Its 768-dimensional output matches the
+  # previous direct Gemini configuration, not the current OpenAI default.
+  - model_name: claimiq-embedding-gemini
+    litellm_params:
+      model: gemini/gemini-embedding-001
+      api_key: os.environ/GEMINI_API_KEY
+      output_dimensionality: 768
+    model_info:
+      mode: embedding
+      base_model: gemini-embedding-001
+
+litellm_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  drop_params: true
+  num_retries: 2
+  request_timeout: 120

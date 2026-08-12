@@ -1,11 +1,11 @@
 # ClaimIQ - FastAPI Application
 
-A FastAPI application for file processing and AI-powered querying with MongoDB and Redis/Valkey backend.
+A FastAPI application for file processing and AI-powered querying with MongoDB, Redis/Valkey, Qdrant, and a LiteLLM gateway.
 
 ## Features
 
 - File upload and processing
-- AI-powered document querying using Gemini
+- AI-powered document querying through LiteLLM's OpenAI-compatible API
 - Asynchronous task processing with RQ
 - MongoDB for data persistence
 - Redis/Valkey for queue management
@@ -13,7 +13,7 @@ A FastAPI application for file processing and AI-powered querying with MongoDB a
 ## Prerequisites
 
 - Docker and Docker Compose
-- Gemini API key (for AI functionality)
+- Provider API keys configured for the LiteLLM gateway
 
 ## Development Setup
 
@@ -36,6 +36,7 @@ docker-compose up --build
 
 The application will be available at:
 - API: http://localhost:8000
+- LiteLLM Proxy: http://localhost:4000
 - MongoDB: localhost:27017
 - Valkey/Redis: localhost:6379
 
@@ -73,6 +74,11 @@ docker-compose -f docker-compose.prod.yml up --build -d
 - Handles file uploads and queries
 - Port: 8000
 
+### LiteLLM (litellm)
+- OpenAI-compatible gateway for chat and embedding requests
+- Stores provider credentials at the gateway boundary
+- Port: 4000 in development
+
 ### MongoDB (mongo)
 - Document database
 - Stores file metadata and processing status
@@ -96,7 +102,13 @@ docker-compose -f docker-compose.prod.yml up --build -d
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `GEMINI_API_KEY` | Google Gemini API key | Required |
+| `GEMINI_API_KEY` | Gemini key used by LiteLLM | Optional, depending on configured models |
+| `OPENAI_API_KEY` | OpenAI key used by LiteLLM | Optional, depending on configured models |
+| `LITELLM_API_KEY` | Key used by ClaimIQ to call the proxy; use the master key unless virtual keys are configured | Required |
+| `LITELLM_MASTER_KEY` | Key used by the LiteLLM proxy | Required |
+| `LITELLM_BASE_URL` | Internal proxy URL | `http://litellm:4000` |
+| `VECTOR_EMBEDDING_PROVIDER` | Embedding alias selection | `openai` |
+| `VECTOR_DIMENSIONS` | Existing Qdrant vector dimension | `1536` |
 | `MONGO_ROOT_USERNAME` | MongoDB root username | admin |
 | `MONGO_ROOT_PASSWORD` | MongoDB root password | admin |
 | `PYTHONPATH` | Python path | /app |

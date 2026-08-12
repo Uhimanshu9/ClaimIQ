@@ -1,6 +1,22 @@
 version: '3.8'
 
 services:
+  litellm:
+    image: docker.litellm.ai/berriai/litellm:main-latest
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    environment:
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:?LITELLM_MASTER_KEY is required}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ./litellm_config.yaml:/app/config.yaml:ro
+    restart: unless-stopped
+    networks:
+      - app-network
+
   app:
     build: .
     ports:
@@ -8,12 +24,14 @@ services:
     environment:
       - PYTHONPATH=/app
       - PYTHONUNBUFFERED=1
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - LITELLM_BASE_URL=http://litellm:4000
+      - LITELLM_API_KEY=${LITELLM_API_KEY:?LITELLM_API_KEY is required}
     volumes:
       - uploads:/mnt/uploads
     depends_on:
       - mongo
       - valkey
+      - litellm
     restart: unless-stopped
     networks:
       - app-network
@@ -63,12 +81,14 @@ services:
     environment:
       - PYTHONPATH=/app
       - PYTHONUNBUFFERED=1
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - LITELLM_BASE_URL=http://litellm:4000
+      - LITELLM_API_KEY=${LITELLM_API_KEY:?LITELLM_API_KEY is required}
     volumes:
       - uploads:/mnt/uploads
     depends_on:
       - mongo
       - valkey
+      - litellm
     restart: unless-stopped
     networks:
       - app-network

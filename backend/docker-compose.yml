@@ -1,13 +1,31 @@
 services:
-  app:
-    build: .
+  litellm:
+    image: docker.litellm.ai/berriai/litellm:main-latest
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
     env_file:
       - .env
+    environment:
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-sk-claimiq-master}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./litellm_config.yaml:/app/config.yaml:ro
     ports:
-      - "8000:8000"
+      - "${CLAIMIQ_LITELLM_PORT:-4000}:4000"
+    restart: unless-stopped
+
+  app:
+    build: .
+    ports:
+      - "${CLAIMIQ_BACKEND_PORT:-8000}:8000"
     environment:
       - PYTHONPATH=/app
       - PYTHONUNBUFFERED=1
+      - LITELLM_BASE_URL=http://litellm:4000
+      - LITELLM_API_KEY=${LITELLM_API_KEY:-sk-claimiq-master}
+      - VECTOR_EMBEDDING_PROVIDER=${VECTOR_EMBEDDING_PROVIDER:-openai}
+      - VECTOR_DIMENSIONS=${VECTOR_DIMENSIONS:-1536}
+      - QDRANT_COLLECTION=${QDRANT_COLLECTION:-pdf_collection_openai_small}
+      - QDRANT_URL=${QDRANT_URL:-http://qdrant:6333}
     volumes:
       - uploads:/mnt/uploads
       - ./app:/app/app  # For development - remove in production
@@ -15,6 +33,7 @@ services:
       - mongo
       - valkey
       - qdrant
+      - litellm
     restart: unless-stopped
     dns:
       - 8.8.8.8
@@ -23,7 +42,7 @@ services:
   mongo:
     image: mongo
     ports:
-      - "27017:27017"
+      - "${CLAIMIQ_MONGO_PORT:-27017}:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=admin
@@ -35,14 +54,14 @@ services:
   valkey:
     image: valkey/valkey:latest
     ports:
-      - "6379:6379"
+      - "${CLAIMIQ_VALKEY_PORT:-6379}:6379"
     volumes:
       - valkey_data:/usr/local/etc/valkey
     restart: unless-stopped
   qdrant:
     image: qdrant/qdrant:latest
     ports:
-      - "6333:6333"
+      - "${CLAIMIQ_QDRANT_PORT:-6333}:6333"
     volumes:
       - qdrant_data:/qdrant/storage
 
